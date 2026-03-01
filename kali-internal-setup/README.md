@@ -43,12 +43,14 @@ sudo ./pentest_setup.sh
 | [Poetry](https://github.com/python-poetry/poetry) | Official installer | Python package manager |
 | [NetExec](https://github.com/Pennyw0rth/NetExec) | git + pipx | Network protocol execution |
 | [Coercer](https://github.com/p0dalirius/Coercer) | git | Authentication coercion |
+| [pxethiefy](https://github.com/csandker/pxethiefy) | git + venv | PXE boot media discovery (SCCM) |
 
 ## Notes
 
 - **RustHound-CE** and the cargo build require an internet connection to pull crates on first run — this can take several minutes
 - **Rust** is installed via `rustup` rather than apt, as the apt package is too old for several required crates
 - **Certipy** and **NetExec** are installed via `pipx` to avoid conflicts with Kali's system-managed Python packages
+- **pxethiefy** is installed in an isolated Python venv at `/opt/pxethiefy/venv`; the `/usr/local/bin/pxethiefy` wrapper auto-escalates via `sudo` when not running as root, as the tool requires raw packet access (`CAP_NET_RAW`)
 - If any tool fails, the script continues and reports failures in the final summary
 - Re-running the script is safe — existing git repos are pulled rather than re-cloned
 
