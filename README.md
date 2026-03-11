@@ -43,6 +43,7 @@ sudo ./pentest_setup.sh
 | [Poetry](https://github.com/python-poetry/poetry) | Official installer | Python package manager |
 | [NetExec](https://github.com/Pennyw0rth/NetExec) | git + pipx | Network protocol execution |
 | [Coercer](https://github.com/p0dalirius/Coercer) | git | Authentication coercion |
+| [RelayKing-Depth](https://github.com/depthsecurity/RelayKing-Depth) | git + pipx | NTLM & Kerberos relay detection |
 | [pxethiefy](https://github.com/csandker/pxethiefy) | git + venv | PXE boot media discovery (SCCM) |
 
 ## Notes
