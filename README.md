@@ -40,6 +40,7 @@ sudo ./pentest_setup.sh
 | [RustHound-CE](https://github.com/g0h4n/RustHound-CE) | git + cargo | BloodHound data collection |
 | [Impacket](https://github.com/fortra/impacket) | git | Windows protocol suite |
 | [BloodHound.py](https://github.com/dirkjanm/BloodHound.py) | git | AD enumeration |
+| [ADscan](https://github.com/ADScanPro/adscan) | pipx | AD enumeration / attack CLI |
 | [Poetry](https://github.com/python-poetry/poetry) | Official installer | Python package manager |
 | [NetExec](https://github.com/Pennyw0rth/NetExec) | git + pipx | Network protocol execution |
 | [Coercer](https://github.com/p0dalirius/Coercer) | git | Authentication coercion |
@@ -51,6 +52,7 @@ sudo ./pentest_setup.sh
 - **RustHound-CE** and the cargo build require an internet connection to pull crates on first run — this can take several minutes
 - **Rust** is installed via `rustup` rather than apt, as the apt package is too old for several required crates
 - **Certipy** and **NetExec** are installed via `pipx` to avoid conflicts with Kali's system-managed Python packages
+- **ADscan** is installed via `pipx install adscan`; the script then runs `adscan install` to download BloodHound CE and configure the tool workspace — this step requires internet access and may take several minutes. If `adscan install` fails during automated setup, run it manually after the script completes
 - **pxethiefy** is installed in an isolated Python venv at `/opt/pxethiefy/venv`; the `/usr/local/bin/pxethiefy` wrapper auto-escalates via `sudo` when not running as root, as the tool requires raw packet access (`CAP_NET_RAW`)
 - If any tool fails, the script continues and reports failures in the final summary
 - Re-running the script is safe — existing git repos are pulled rather than re-cloned
