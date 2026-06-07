@@ -49,6 +49,8 @@ sudo ./pentest_setup.sh
 | [PowerShell](https://github.com/PowerShell/PowerShell) | GitHub `.deb` | Shell runtime (Locksmith2 dependency) |
 | [Locksmith2](https://github.com/jakehildreth/Locksmith2) | PSGallery | AD CS misconfiguration auditor (ESC1-ESC16) |
 | [Claude Code](https://code.claude.com/docs) | Signed apt repo | Operator AI assistant (CLI) |
+| [Claude-Red](https://github.com/SnailSploit/Claude-Red) | git → skills | Offensive Claude Code skill pack |
+| [Anthropic-Cybersecurity-Skills](https://github.com/mukul975/Anthropic-Cybersecurity-Skills) | git → skills | 754-skill cybersecurity skill pack |
 
 ## Notes
 
@@ -59,6 +61,7 @@ sudo ./pentest_setup.sh
 - **pxethiefy** is installed in an isolated Python venv at `/opt/pxethiefy/venv`; the `/usr/local/bin/pxethiefy` wrapper auto-escalates via `sudo` when not running as root, as the tool requires raw packet access (`CAP_NET_RAW`)
 - **Locksmith2** is a PowerShell module, so the script first installs the latest **PowerShell** `.deb` (arch-detected: `amd64`/`arm64`) from the official PowerShell GitHub releases, then installs Locksmith2 from the PowerShell Gallery (`AllUsers` scope). The `/usr/local/bin/locksmith2` wrapper imports the module and runs `Invoke-Locksmith2`, forwarding any arguments
 - **Claude Code** is installed from Anthropic's signed apt repository (`downloads.claude.ai`), not hardcoded into this script. No API key is stored: set `ANTHROPIC_API_KEY` in your environment, or run `claude` to log in interactively, before first use
+- **Skill packs** ([Claude-Red](https://github.com/SnailSploit/Claude-Red), [Anthropic-Cybersecurity-Skills](https://github.com/mukul975/Anthropic-Cybersecurity-Skills)) are cloned to `/opt` and every `SKILL.md` directory is flattened into the invoking operator's `~/.claude/skills/` (resolved via `$SUDO_USER`). Each is prefixed by source (`cr-`, `acs-`) so the two collections never clobber each other on disk, and the `~/.claude` tree is chowned back to the operator. Re-running refreshes the deployed copies
 - If any tool fails, the script continues and reports failures in the final summary
 - Re-running the script is safe — existing git repos are pulled rather than re-cloned
 
