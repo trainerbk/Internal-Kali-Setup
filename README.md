@@ -46,6 +46,9 @@ sudo ./pentest_setup.sh
 | [Coercer](https://github.com/p0dalirius/Coercer) | git | Authentication coercion |
 | [RelayKing-Depth](https://github.com/depthsecurity/RelayKing-Depth) | git + pipx | NTLM & Kerberos relay detection |
 | [pxethiefy](https://github.com/csandker/pxethiefy) | git + venv | PXE boot media discovery (SCCM) |
+| [PowerShell](https://github.com/PowerShell/PowerShell) | GitHub `.deb` | Shell runtime (Locksmith2 dependency) |
+| [Locksmith2](https://github.com/jakehildreth/Locksmith2) | PSGallery | AD CS misconfiguration auditor (ESC1-ESC16) |
+| [Claude Code](https://code.claude.com/docs) | Signed apt repo | Operator AI assistant (CLI) |
 
 ## Notes
 
@@ -54,6 +57,8 @@ sudo ./pentest_setup.sh
 - **Certipy** and **NetExec** are installed via `pipx` to avoid conflicts with Kali's system-managed Python packages
 - **ADscan** is installed via `pipx install adscan`; the script then runs `adscan install` to download BloodHound CE and configure the tool workspace — this step requires internet access and may take several minutes. If `adscan install` fails during automated setup, run it manually after the script completes
 - **pxethiefy** is installed in an isolated Python venv at `/opt/pxethiefy/venv`; the `/usr/local/bin/pxethiefy` wrapper auto-escalates via `sudo` when not running as root, as the tool requires raw packet access (`CAP_NET_RAW`)
+- **Locksmith2** is a PowerShell module, so the script first installs the latest **PowerShell** `.deb` (arch-detected: `amd64`/`arm64`) from the official PowerShell GitHub releases, then installs Locksmith2 from the PowerShell Gallery (`AllUsers` scope). The `/usr/local/bin/locksmith2` wrapper imports the module and runs `Invoke-Locksmith2`, forwarding any arguments
+- **Claude Code** is installed from Anthropic's signed apt repository (`downloads.claude.ai`), not hardcoded into this script. No API key is stored: set `ANTHROPIC_API_KEY` in your environment, or run `claude` to log in interactively, before first use
 - If any tool fails, the script continues and reports failures in the final summary
 - Re-running the script is safe — existing git repos are pulled rather than re-cloned
 
