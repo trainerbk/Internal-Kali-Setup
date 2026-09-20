@@ -47,6 +47,7 @@ sudo ./pentest_setup.sh
 | [Poetry](https://github.com/python-poetry/poetry) | Official installer | Python package manager |
 | [NetExec](https://github.com/Pennyw0rth/NetExec) | git + pipx | Network protocol execution |
 | [Coercer](https://github.com/p0dalirius/Coercer) | git | Authentication coercion |
+| [RelayKing-Depth](https://github.com/depthsecurity/RelayKing-Depth) | git + pipx | NTLM & Kerberos relay detection |
 | [SCCMHunter](https://github.com/garrettfoster13/sccmhunter) | git + pipx | SCCM/MECM asset discovery and attack |
 | [pxethiefy](https://github.com/csandker/pxethiefy) | git + venv | PXE boot media discovery (SCCM) |
 | [PowerShell](https://github.com/PowerShell/PowerShell) | GitHub `.deb` | Shell runtime (Locksmith2 dependency) |
@@ -65,6 +66,7 @@ sudo ./pentest_setup.sh
 - **pxethiefy** is installed in an isolated Python venv at `/opt/pxethiefy/venv`; the `/usr/local/bin/pxethiefy` wrapper auto-escalates via `sudo` when not running as root, as the tool requires raw packet access (`CAP_NET_RAW`)
 - **Locksmith2** is a PowerShell module, so the script first installs the latest **PowerShell** `.deb` (arch-detected: `amd64`/`arm64`) from the official PowerShell GitHub releases, then installs Locksmith2 from the PowerShell Gallery (`AllUsers` scope). The `/usr/local/bin/locksmith2` wrapper imports the module and runs `Invoke-Locksmith2`, forwarding any arguments
 - **ADhammer** is a pure-Rust static binary — built with `cargo build --release` (same rustup toolchain as RustHound-CE, no OpenSSL dependency). Clones to `/opt/adhammer`; binary symlinked to `/usr/local/bin/adhammer`. Covers 41 AD audit checks plus live-validation modules (DCSync, golden/silver tickets, ADCS ESC1-ESC15, NTLM relay, RCE). First build pulls crates and can take a few minutes
+- **RelayKing-Depth** is installed via `pipx` with a `pip3` fallback; clones to `/opt/RelayKing-Depth`
 - **SCCMHunter** is installed via `pipx` with a `pip3` fallback; clones to `/opt/sccmhunter`. See the [wiki](https://github.com/garrettfoster13/sccmhunter/wiki) for module usage (`find`, `show`, `smb`, `http`, `dpapi`, etc.)
 - **adnullenum** clones to `/opt/adnullenum`; single script, no separate dependencies beyond impacket (already installed by the Impacket step). Symlinked to `/usr/local/bin/adnullenum`. Usage: `adnullenum <dc-ip> --mode full`
 - **CVE-2026-54121 (Certighost)** clones to `/opt/CVE-2026-54121`; the `certighost.py` script requires root (binds ports 389/445 for rogue LDAP/SMB listeners). The script installs `cryptography pyasn1 asn1crypto pycryptodome dnspython` via pip; impacket is already present from the Impacket step. Usage: `sudo certighost -d <domain> -u <user> -p <pass> --dc-ip <dc-ip>`

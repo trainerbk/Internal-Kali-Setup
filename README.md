@@ -38,30 +38,41 @@ sudo ./pentest_setup.sh
 | [PCredz](https://github.com/lgandx/PCredz) | git | Credential extraction (pcap) |
 | [lnk-it-up](https://github.com/wietze/lnk-it-up) | git | LNK file generation |
 | [RustHound-CE](https://github.com/g0h4n/RustHound-CE) | git + cargo | BloodHound data collection |
+| [ADhammer](https://github.com/icedracon/adhammer) | git + cargo | AD audit + attack validation (41 checks, DCSync, tickets, relay, ADCS) |
 | [Impacket](https://github.com/fortra/impacket) | git | Windows protocol suite |
+| [adnullenum](https://github.com/crypt0p3g/adnullenum) | git | Anonymous (null session) AD enumeration over SAMR/LSARPC |
+| [CVE-2026-54121 (Certighost)](https://github.com/aniqfakhrul/CVE-2026-54121) | git | AD CS cdc-redirect PoC — coerces CA into issuing DC certificate |
 | [BloodHound.py](https://github.com/dirkjanm/BloodHound.py) | git | AD enumeration |
 | [ADscan](https://github.com/ADScanPro/adscan) | pipx | AD enumeration / attack CLI |
 | [Poetry](https://github.com/python-poetry/poetry) | Official installer | Python package manager |
 | [NetExec](https://github.com/Pennyw0rth/NetExec) | git + pipx | Network protocol execution |
 | [Coercer](https://github.com/p0dalirius/Coercer) | git | Authentication coercion |
 | [RelayKing-Depth](https://github.com/depthsecurity/RelayKing-Depth) | git + pipx | NTLM & Kerberos relay detection |
+| [SCCMHunter](https://github.com/garrettfoster13/sccmhunter) | git + pipx | SCCM/MECM asset discovery and attack |
 | [pxethiefy](https://github.com/csandker/pxethiefy) | git + venv | PXE boot media discovery (SCCM) |
 | [PowerShell](https://github.com/PowerShell/PowerShell) | GitHub `.deb` | Shell runtime (Locksmith2 dependency) |
 | [Locksmith2](https://github.com/jakehildreth/Locksmith2) | PSGallery | AD CS misconfiguration auditor (ESC1-ESC16) |
 | [Claude Code](https://code.claude.com/docs) | Signed apt repo | Operator AI assistant (CLI) |
 | [Claude-Red](https://github.com/SnailSploit/Claude-Red) | git → skills | Offensive Claude Code skill pack |
 | [Anthropic-Cybersecurity-Skills](https://github.com/mukul975/Anthropic-Cybersecurity-Skills) | git → skills | 754-skill cybersecurity skill pack |
+| [CyberStrike](https://github.com/CyberStrikeus/CyberStrike) | npm | Autonomous AI-driven pentest agent platform |
 
 ## Notes
 
-- **RustHound-CE** and the cargo build require an internet connection to pull crates on first run — this can take several minutes
+- **RustHound-CE** requires `clang`, `libclang-dev`, `libgssapi-krb5-2`, and `libsasl2-modules-gssapi-mit` for its GSSAPI/Kerberos bindgen step — these are now included in base deps. The cargo build also pulls crates on first run and can take several minutes
 - **Rust** is installed via `rustup` rather than apt, as the apt package is too old for several required crates
 - **Certipy** and **NetExec** are installed via `pipx` to avoid conflicts with Kali's system-managed Python packages
 - **ADscan** is installed via `pipx install adscan`; the script then runs `adscan install` to download BloodHound CE and configure the tool workspace — this step requires internet access and may take several minutes. If `adscan install` fails during automated setup, run it manually after the script completes
 - **pxethiefy** is installed in an isolated Python venv at `/opt/pxethiefy/venv`; the `/usr/local/bin/pxethiefy` wrapper auto-escalates via `sudo` when not running as root, as the tool requires raw packet access (`CAP_NET_RAW`)
 - **Locksmith2** is a PowerShell module, so the script first installs the latest **PowerShell** `.deb` (arch-detected: `amd64`/`arm64`) from the official PowerShell GitHub releases, then installs Locksmith2 from the PowerShell Gallery (`AllUsers` scope). The `/usr/local/bin/locksmith2` wrapper imports the module and runs `Invoke-Locksmith2`, forwarding any arguments
+- **ADhammer** is a pure-Rust static binary — built with `cargo build --release` (same rustup toolchain as RustHound-CE, no OpenSSL dependency). Clones to `/opt/adhammer`; binary symlinked to `/usr/local/bin/adhammer`. Covers 41 AD audit checks plus live-validation modules (DCSync, golden/silver tickets, ADCS ESC1-ESC15, NTLM relay, RCE). First build pulls crates and can take a few minutes
+- **RelayKing-Depth** is installed via `pipx` with a `pip3` fallback; clones to `/opt/RelayKing-Depth`
+- **SCCMHunter** is installed via `pipx` with a `pip3` fallback; clones to `/opt/sccmhunter`. See the [wiki](https://github.com/garrettfoster13/sccmhunter/wiki) for module usage (`find`, `show`, `smb`, `http`, `dpapi`, etc.)
+- **adnullenum** clones to `/opt/adnullenum`; single script, no separate dependencies beyond impacket (already installed by the Impacket step). Symlinked to `/usr/local/bin/adnullenum`. Usage: `adnullenum <dc-ip> --mode full`
+- **CVE-2026-54121 (Certighost)** clones to `/opt/CVE-2026-54121`; the `certighost.py` script requires root (binds ports 389/445 for rogue LDAP/SMB listeners). The script installs `cryptography pyasn1 asn1crypto pycryptodome dnspython` via pip; impacket is already present from the Impacket step. Usage: `sudo certighost -d <domain> -u <user> -p <pass> --dc-ip <dc-ip>`
 - **Claude Code** is installed from Anthropic's signed apt repository (`downloads.claude.ai`), not hardcoded into this script. No API key is stored: set `ANTHROPIC_API_KEY` in your environment, or run `claude` to log in interactively, before first use
 - **Skill packs** ([Claude-Red](https://github.com/SnailSploit/Claude-Red), [Anthropic-Cybersecurity-Skills](https://github.com/mukul975/Anthropic-Cybersecurity-Skills)) are cloned to `/opt` and every `SKILL.md` directory is flattened into the invoking operator's `~/.claude/skills/` (resolved via `$SUDO_USER`). Each is prefixed by source (`cr-`, `acs-`) so the two collections never clobber each other on disk, and the `~/.claude` tree is chowned back to the operator. Re-running refreshes the deployed copies
+- **CyberStrike** is installed globally via `npm install -g @cyberstrike-io/cyberstrike` (Node.js/`npm` are now included in base deps). It needs an API key/subscription from at least one supported AI provider (Anthropic, OpenAI, Google, AWS Bedrock, Azure, etc.) or a local Ollama/LM Studio endpoint — none is stored by this script. Run `cyberstrike` to configure a provider interactively
 - If any tool fails, the script continues and reports failures in the final summary
 - Re-running the script is safe — existing git repos are pulled rather than re-cloned
 
