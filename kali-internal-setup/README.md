@@ -50,6 +50,8 @@ sudo ./pentest_setup.sh
 | [RelayKing-Depth](https://github.com/depthsecurity/RelayKing-Depth) | git + pipx | NTLM & Kerberos relay detection |
 | [SCCMHunter](https://github.com/garrettfoster13/sccmhunter) | git + pipx | SCCM/MECM asset discovery and attack |
 | [pxethiefy](https://github.com/csandker/pxethiefy) | git + venv | PXE boot media discovery (SCCM) |
+| [snafflepy](https://github.com/cisagov/snafflepy) | git + venv | Snaffler port for Linux: LDAP computer discovery + SMB share/file hunting |
+| [Snaffler](https://github.com/SnaffCon/Snaffler) | GitHub release (`Snaffler.exe`) | Windows share/file hunting binary, downloaded for transfer (not run by the script) |
 | [PowerShell](https://github.com/PowerShell/PowerShell) | GitHub `.deb` | Shell runtime (Locksmith2 dependency) |
 | [Locksmith2](https://github.com/jakehildreth/Locksmith2) | PSGallery | AD CS misconfiguration auditor (ESC1-ESC16) |
 | [Claude Code](https://code.claude.com/docs) | Signed apt repo | Operator AI assistant (CLI) |
@@ -68,6 +70,8 @@ sudo ./pentest_setup.sh
 - **Impacket** is installed with `pip3` from the GitHub checkout. After install the script checks that `MSSQLRelayServer` imports, which confirms the GitHub copy is the one being used. If the check fails, an older Kali `python3-impacket` is shadowing it; the script prints the `apt purge` command to fix that, then the step can be re-run
 - **ADscan** is installed via `pipx install adscan`; the script then runs `adscan install` to download BloodHound CE and configure the tool workspace — this step requires internet access and may take several minutes. If `adscan install` fails during automated setup, run it manually after the script completes
 - **pxethiefy** is installed in an isolated Python venv at `/opt/pxethiefy/venv`; the `/usr/local/bin/pxethiefy` wrapper auto-escalates via `sudo` when not running as root, as the tool requires raw packet access (`CAP_NET_RAW`)
+- **snafflepy** (CISA's Python port of Snaffler) clones to `/opt/snafflepy` and runs from an isolated venv at `/opt/snafflepy/venv`; the `/usr/local/bin/snafflepy` wrapper forwards arguments to `snaffler.py`. Runs from Linux over SMB/LDAP, so no Windows host is needed. Example: `snafflepy <ip> -u <user> -p <pass> -d <domain> -v`
+- **Snaffler** (SnaffCon, .NET) is a Windows tool, so the script only downloads the latest `Snaffler.exe` release asset to `/opt/Snaffler/Snaffler.exe` for transfer to a foothold. Nothing is executed on the Kali box. The release tag is recorded in `/opt/Snaffler/VERSION`; re-runs skip the download when it matches the latest release
 - **Locksmith2** is a PowerShell module, so the script first installs the latest **PowerShell** `.deb` (arch-detected: `amd64`/`arm64`) from the official PowerShell GitHub releases, then installs Locksmith2 from the PowerShell Gallery (`AllUsers` scope). The `/usr/local/bin/locksmith2` wrapper imports the module and runs `Invoke-Locksmith2`, forwarding any arguments
 - **ADhammer** is a pure-Rust static binary — built with `cargo build --release` (same rustup toolchain as RustHound-CE, no OpenSSL dependency). Clones to `/opt/adhammer`; binary symlinked to `/usr/local/bin/adhammer`. Covers 41 AD audit checks plus live-validation modules (DCSync, golden/silver tickets, ADCS ESC1-ESC15, NTLM relay, RCE). First build pulls crates and can take a few minutes
 - **RelayKing-Depth** is installed via `pipx` with a `pip3` fallback; clones to `/opt/RelayKing-Depth`
