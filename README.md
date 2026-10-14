@@ -61,7 +61,9 @@ sudo ./pentest_setup.sh
 
 - **RustHound-CE** requires `clang`, `libclang-dev`, `libgssapi-krb5-2`, and `libsasl2-modules-gssapi-mit` for its GSSAPI/Kerberos bindgen step — these are now included in base deps. The cargo build also pulls crates on first run and can take several minutes
 - **Rust** is installed via `rustup` rather than apt, as the apt package is too old for several required crates
-- **Certipy** and **NetExec** are installed via `pipx` to avoid conflicts with Kali's system-managed Python packages
+- **Certipy** and **NetExec** are installed via `pipx` to avoid conflicts with Kali's system-managed Python packages. The script sets `PIPX_HOME=/opt/pipx` and `PIPX_BIN_DIR=/usr/local/bin`, so the `pipx` apps land on PATH for root and under `sudo` (previously they went to `/root/.local/bin`, which new shells did not have on PATH). NetExec re-runs use `pipx install --force` against the local clone rather than `pipx upgrade`
+- **Responder** reads `Responder.conf` from its own clone directory. If an existing `/opt/Responder` checkout is missing the `WPADScript` option (startup fails with `NoOptionError`), the script backs up the file to `Responder.conf.bak` and restores the upstream copy from `origin/HEAD`
+- **Impacket** is installed with `pip3` from the GitHub checkout. After install the script checks that `MSSQLRelayServer` imports, which confirms the GitHub copy is the one being used. If the check fails, an older Kali `python3-impacket` is shadowing it; the script prints the `apt purge` command to fix that, then the step can be re-run
 - **ADscan** is installed via `pipx install adscan`; the script then runs `adscan install` to download BloodHound CE and configure the tool workspace — this step requires internet access and may take several minutes. If `adscan install` fails during automated setup, run it manually after the script completes
 - **pxethiefy** is installed in an isolated Python venv at `/opt/pxethiefy/venv`; the `/usr/local/bin/pxethiefy` wrapper auto-escalates via `sudo` when not running as root, as the tool requires raw packet access (`CAP_NET_RAW`)
 - **Locksmith2** is a PowerShell module, so the script first installs the latest **PowerShell** `.deb` (arch-detected: `amd64`/`arm64`) from the official PowerShell GitHub releases, then installs Locksmith2 from the PowerShell Gallery (`AllUsers` scope). The `/usr/local/bin/locksmith2` wrapper imports the module and runs `Invoke-Locksmith2`, forwarding any arguments
@@ -79,6 +81,16 @@ sudo ./pentest_setup.sh
 ## Log
 
 Full output is written to `/var/log/pentest_setup.log` for troubleshooting failed installs.
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `netexec: command not found` after install | pipx apps went to `/root/.local/bin`, which is not on PATH | Fixed in the script (`PIPX_BIN_DIR=/usr/local/bin`). On an existing box, either re-run the script's NetExec step, or link it: `sudo ln -sf /root/.local/bin/netexec /usr/local/bin/netexec` |
+| `pipx upgrade netexec` → `Unable to parse package spec: /opt/NetExec` | pipx stored the local path as the package spec | `sudo pipx install --force /opt/NetExec` (the script now does this) |
+| `pipx install git+https://github.com/Pennyw0rth/NetExec` → "already seems to be installed" | An existing venv is kept unless forced | `pipx install --force ...` |
+| `KeyError: 'wpadscript'` / `NoOptionError: No option 'wpadscript' in section: 'HTTP Server'` from Responder | `/opt/Responder/Responder.conf` lacks the `WPADScript` option | Re-run the script (restores the file), or `cd /opt/Responder && git checkout origin/HEAD -- Responder.conf` |
+| `ImportError: cannot import name 'MSSQLRelayServer'` from `ntlmrelayx.py` | Kali's older `python3-impacket` in `/usr/lib/python3/dist-packages` is shadowing the GitHub install | `sudo apt purge -y python3-impacket impacket-scripts`, then re-run the Impacket step |
 
 ## Legal
 
