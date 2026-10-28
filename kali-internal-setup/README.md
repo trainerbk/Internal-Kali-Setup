@@ -33,6 +33,7 @@ sudo ./pentest_setup.sh
 | [LdapRelayScan](https://github.com/zyn3rgy/LdapRelayScan) | git | LDAP relay detection |
 | [cloud_enum](https://github.com/initstring/cloud_enum) | git | Cloud asset enumeration |
 | [CloudHunter](https://github.com/belane/CloudHunter) | git | Cloud bucket hunting |
+| [CloudPEASS](https://github.com/peass-ng/CloudPEASS) | git | Cloud (AWS/Azure/GCP) privilege escalation path finder |
 | [dnshunter](https://github.com/5amu/dnshunter) | git | DNS recon |
 | [msftrecon](https://github.com/Arcanum-Sec/msftrecon) | git | Microsoft recon |
 | [PCredz](https://github.com/lgandx/PCredz) | git | Credential extraction (pcap) |
