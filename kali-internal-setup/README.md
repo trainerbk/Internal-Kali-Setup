@@ -29,6 +29,7 @@ sudo ./pentest_setup.sh
 | [Responder](https://github.com/lgandx/Responder) | git | LLMNR/NBT-NS poisoning |
 | [Certipy](https://github.com/ly4k/Certipy) | git + pipx | Active Directory / ADCS |
 | [KrbRelayX](https://github.com/dirkjanm/krbrelayx) | git | Kerberos relay |
+| [Kerbrute](https://github.com/ropnop/kerbrute) | git + Go build | Kerberos pre-auth username enumeration / password spraying |
 | [mitm6](https://github.com/dirkjanm/mitm6) | git | IPv6 MITM |
 | [LdapRelayScan](https://github.com/zyn3rgy/LdapRelayScan) | git | LDAP relay detection |
 | [cloud_enum](https://github.com/initstring/cloud_enum) | git | Cloud asset enumeration |
@@ -60,11 +61,13 @@ sudo ./pentest_setup.sh
 | [Claude-Red](https://github.com/SnailSploit/Claude-Red) | git → skills | Offensive Claude Code skill pack |
 | [Anthropic-Cybersecurity-Skills](https://github.com/mukul975/Anthropic-Cybersecurity-Skills) | git → skills | 754-skill cybersecurity skill pack |
 | [CyberStrike](https://github.com/CyberStrikeus/CyberStrike) | npm | Autonomous AI-driven pentest agent platform |
+| `top1000lastnames.txt` | Bundled file | Last-name wordlist for username generation / password spraying |
 
 ## Notes
 
 - **RustHound-CE** requires `clang`, `libclang-dev`, `libgssapi-krb5-2`, and `libsasl2-modules-gssapi-mit` for its GSSAPI/Kerberos bindgen step — these are now included in base deps. The cargo build also pulls crates on first run and can take several minutes
 - **Rust** is installed via `rustup` rather than apt, as the apt package is too old for several required crates
+- **Kerbrute** clones to `/opt/kerbrute` and is built with `GOBIN=/usr/local/bin go install .` (single main package at the repo root, so the binary lands on PATH as `kerbrute` with no extra symlink step). Usage: `kerbrute userenum -d <domain> --dc <dc-ip> <userlist>` (the bundled `top1000lastnames.txt` in `/root` can seed a userlist)
 - **Certipy** and **NetExec** are installed via `pipx` to avoid conflicts with Kali's system-managed Python packages. The script sets `PIPX_HOME=/opt/pipx` and `PIPX_BIN_DIR=/usr/local/bin`, so the `pipx` apps land on PATH for root and under `sudo` (previously they went to `/root/.local/bin`, which new shells did not have on PATH). NetExec re-runs use `pipx install --force` against the local clone rather than `pipx upgrade`
 - **NetExec latest build**: the step purges Kali's `netexec` apt package and deletes any leftover `/usr/bin/nxc`, pulls the latest commit into `/opt/NetExec` (fast-forward only; a failed pull is warned and the existing checkout is kept), then runs `pipx install --force`. It fails unless `nxc` and `netexec` both resolve to `/usr/local/bin`, so the Kali binary cannot be the one you run
 - **NetExec version check**: after install the script reads the installed version and compares its commit suffix (e.g. `1.5.1+713.d640fb78`) to the HEAD of `/opt/NetExec`. It warns if the build is stale or has no commit suffix, which means it is the Kali package rather than the repo build
@@ -85,6 +88,7 @@ sudo ./pentest_setup.sh
 - **Claude Code** is installed from Anthropic's signed apt repository (`downloads.claude.ai`), not hardcoded into this script. No API key is stored: set `ANTHROPIC_API_KEY` in your environment, or run `claude` to log in interactively, before first use
 - **Skill packs** ([Claude-Red](https://github.com/SnailSploit/Claude-Red), [Anthropic-Cybersecurity-Skills](https://github.com/mukul975/Anthropic-Cybersecurity-Skills)) are cloned to `/opt` and every `SKILL.md` directory is flattened into the invoking operator's `~/.claude/skills/` (resolved via `$SUDO_USER`). Each is prefixed by source (`cr-`, `acs-`) so the two collections never clobber each other on disk, and the `~/.claude` tree is chowned back to the operator. Re-running refreshes the deployed copies
 - **CyberStrike** is installed globally via `npm install -g @cyberstrike-io/cyberstrike` (Node.js/`npm` are now included in base deps). It needs an API key/subscription from at least one supported AI provider (Anthropic, OpenAI, Google, AWS Bedrock, Azure, etc.) or a local Ollama/LM Studio endpoint — none is stored by this script. Run `cyberstrike` to configure a provider interactively
+- **`top1000lastnames.txt`** ships alongside `pentest_setup.sh` in this repo and is copied to `/root/top1000lastnames.txt` during setup (`deploy_wordlists`, resolved via the script's own directory, not the caller's CWD). If the file isn't found next to the script, the step warns and skips rather than failing the run
 - If any tool fails, the script continues and reports failures in the final summary
 - Re-running the script is safe — existing git repos are pulled rather than re-cloned
 
@@ -102,6 +106,16 @@ Full output is written to `/var/log/pentest_setup.log` for troubleshooting faile
 | `pipx install git+https://github.com/Pennyw0rth/NetExec` → "already seems to be installed" | An existing venv is kept unless forced | `pipx install --force ...` |
 | `KeyError: 'wpadscript'` / `NoOptionError: No option 'wpadscript' in section: 'HTTP Server'` from Responder | `/opt/Responder/Responder.conf` lacks the `WPADScript` option | Re-run the script (restores the file), or `cd /opt/Responder && git checkout origin/HEAD -- Responder.conf` |
 | `ImportError: cannot import name 'MSSQLRelayServer'` from `ntlmrelayx.py` | Kali's older `python3-impacket` in `/usr/lib/python3/dist-packages` is shadowing the GitHub install | `sudo apt purge -y python3-impacket impacket-scripts`, then re-run the Impacket step |
+| `sccmhunter: command not found` after a reportedly successful install | `pipx install` exited 0 but the console script never resolved on PATH (stale/partial venv) | Fixed in the script — `install_sccmhunter` now checks `command -v sccmhunter` after the pipx install and falls back to the pip/symlink path if it's missing, same as `verify_binaries` below. Re-run the script; if it still fails, check `/var/log/pentest_setup.log` for the pipx build error (often the `ly4k/ldap3` git dependency in `requirements.txt` timing out) |
+
+## Pre-Engagement Checklist
+
+This NUC is typically shipped to client sites that block GitHub outright. Nearly every tool above is installed from a GitHub clone or a `pip`/`pipx` package with a `git+https://github.com/...` dependency (e.g. SCCMHunter → `ly4k/ldap3`), so **there is no fixing a broken or missing install once onsite** — do this before shipping, while you still have internet:
+
+1. Run `sudo ./pentest_setup.sh` to completion on a network with unrestricted GitHub access.
+2. Check the final summary. A last-step **"Pre-flight: verifying tool binaries"** pass re-checks `command -v` for every tool with a known CLI entry point (`sccmhunter`, `certipy`, `nxc`, `adscan`, `rusthound-ce`, `adhammer`, etc.) and demotes anything that reported success but isn't actually runnable — this is what catches the `sccmhunter: command not found` class of failure before you leave.
+3. If `Failed (N)` is non-zero, resolve each one (see the table above and `/var/log/pentest_setup.log`) and **re-run the script** — it's safe to re-run; existing clones are pulled, not re-cloned. Only ship once the summary shows `All tools verified — NUC is ready for offline/internal deployment`.
+4. On engagement day, do a final sanity pass with no internet (simulate the client network) and spot-check a couple of tools (`sccmhunter -h`, `nxc --version`) to confirm nothing regressed between prep and deployment.
 
 ## Legal
 
