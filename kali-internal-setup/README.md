@@ -45,6 +45,7 @@ sudo ./pentest_setup.sh
 | [adnullenum](https://github.com/crypt0p3g/adnullenum) | git | Anonymous (null session) AD enumeration over SAMR/LSARPC |
 | [CVE-2026-54121 (Certighost)](https://github.com/aniqfakhrul/CVE-2026-54121) | git | AD CS cdc-redirect PoC — coerces CA into issuing DC certificate |
 | [BloodHound.py](https://github.com/dirkjanm/BloodHound.py) | git | AD enumeration |
+| [bloodyAD](https://github.com/CravateRouge/bloodyAD) | pipx | Active Directory privilege escalation framework (LDAP/relaying-based AD abuse) |
 | [ADscan](https://github.com/ADScanPro/adscan) | pipx | AD enumeration / attack CLI |
 | [Poetry](https://github.com/python-poetry/poetry) | Official installer | Python package manager |
 | [NetExec](https://github.com/Pennyw0rth/NetExec) | git + pipx | Network protocol execution |
@@ -74,6 +75,7 @@ sudo ./pentest_setup.sh
 - **NetExec results**: `NXC_PATH` is set to `/opt/results/nxc` in root's `.bashrc`/`.zshrc` (NetExec keeps workspaces, logs and the credential DB there, default `~/.nxc`). The directory is `chmod 700`. Existing `/root/.nxc` is left in place with a warning so you can copy anything you want to keep. Other users are unchanged
 - **Responder** reads `Responder.conf` from its own clone directory. If an existing `/opt/Responder` checkout is missing the `WPADScript` option (startup fails with `NoOptionError`), the script backs up the file to `Responder.conf.bak` and restores the upstream copy from `origin/HEAD`
 - **Impacket** is installed with `pip3` from the GitHub checkout. After install the script checks that `MSSQLRelayServer` imports, which confirms the GitHub copy is the one being used. If the check fails, an older Kali `python3-impacket` is shadowing it; the script prints the `apt purge` command to fix that, then the step can be re-run
+- **bloodyAD** is installed via `pipx install bloodyAD`. Usage: `bloodyAD --host <dc-ip> -d <domain> -u <user> -p <pass> get writable` (see the [wiki](https://github.com/CravateRouge/bloodyAD/wiki) for the full command set)
 - **ADscan** is installed via `pipx install adscan`; the script then runs `adscan install` to download BloodHound CE and configure the tool workspace — this step requires internet access and may take several minutes. If `adscan install` fails during automated setup, run it manually after the script completes
 - **pxethiefy** is installed in an isolated Python venv at `/opt/pxethiefy/venv`; the `/usr/local/bin/pxethiefy` wrapper auto-escalates via `sudo` when not running as root, as the tool requires raw packet access (`CAP_NET_RAW`)
 - **snafflepy** (CISA's Python port of Snaffler) clones to `/opt/snafflepy` and runs from an isolated venv at `/opt/snafflepy/venv`; the `/usr/local/bin/snafflepy` wrapper forwards arguments to `snaffler.py`. Runs from Linux over SMB/LDAP, so no Windows host is needed. Example: `snafflepy <ip> -u <user> -p <pass> -d <domain> -v`
